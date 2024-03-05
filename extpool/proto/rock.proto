@@ -1,0 +1,83 @@
+syntax = "proto3";
+package rock;
+
+option go_package = "rock-chain/extpool/proto";
+
+service Mempool {
+    rpc AddTxs(AddTxsRequest) returns (AddTxsResponse) {} // 客户端向服务端发送交易列表
+    rpc SendBatch(SendBatchRequest) returns (AddTxsResponse) {} // 服务端向其他服务端发送 Batch
+    rpc AckBatch(AckBatchRequest) returns (AddTxsResponse) {} // 服务端向其他服务端发送 Batch 确认
+    rpc FetchBatch(FetchBatchRequest) returns (FetchBatchResponse) {} // 服务端向其他服务端请求 Batch
+}
+
+message AddTxsRequest {
+    repeated Transaction txs = 1;
+}
+
+message SendBatchRequest {
+    Batch batch = 1;
+}
+
+message AddTxsResponse {
+    // 0: success, 1: fail
+    uint64 status = 1;
+}
+
+message AckBatchRequest {
+    string id = 1;
+}
+
+message FetchBatchRequest {
+    string id = 1;
+}
+
+message FetchBatchResponse {
+    // 0: success, 1: fail
+    uint64 status = 1;
+    Batch batch = 2;
+}
+
+message Batch {
+    string id = 1;
+    repeated Transaction txs = 2;
+}
+
+message Transaction {
+    bytes version = 1;
+	bytes from = 2;
+	bytes to = 3;
+	bytes value = 4;
+	int64 timestamp = 5;
+	bytes signature = 6;
+	uint64 id = 7;
+	bytes transactionHash = 8;
+	int64  nonce = 9;
+	NonHash other = 10;
+	enum TxType {
+                NTX = 0;
+                CTX = 1; // config tx
+                CROSSCHAINTX = 2; // cross chain tx
+                ANCHORTX = 3; // anchor tx
+                CROSSCHAINTXAUTO = 4;
+                ANCHORTXAUTO = 5;
+                TIMEOUTTX = 6;
+        }
+  TxType txType = 11;
+  bytes cName = 12;
+  int64 expiration_timestamp = 13;
+  Participant participant = 14;
+  string extraData = 15;
+  int64 amount = 16;
+}
+
+message NonHash {
+    bytes  nodeHash = 1;
+    bytes  privateTxHash = 2;
+    repeated string collection = 3;
+    uint64 nonce = 4;
+}
+
+message Participant {
+    bytes initiator = 1;
+    repeated bytes withholding = 2;
+}
